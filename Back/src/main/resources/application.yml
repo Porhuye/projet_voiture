@@ -1,0 +1,18 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/carsdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update   # crée ou met à jour le schéma automatiquement
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+  wt:
+    secret: "je-suis-une-cle"
+    expiration: 3600000   # 1h en millisecondes
