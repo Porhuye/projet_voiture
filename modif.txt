@@ -1,0 +1,136 @@
+1️⃣ Organisation du code & imports
+
+Problèmes corrigés :
+
+VoitureController importait à tort VoitureService depuis com.example.cars.dto.
+
+✅ Changement fait :
+
+import com.example.cars.VoitureService; // au lieu de com.example.cars.dto.VoitureService
+
+⚙️ 2️⃣ Fichier build.gradle
+
+Objectif : activer les bons starters pour Spring Boot, JPA, sécurité, JWT, tests, etc.
+
+✅ Tu as désormais :
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+}
+
+🧪 3️⃣ Fichier application-test.yml
+
+Avant : Spring essayait d’insérer dans une table inexistante (voitures)
+Cause : la BDD H2 n’était pas bien configurée pour créer le schéma automatiquement.
+
+✅ Fichier corrigé :
+
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:carsdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate.format_sql: true
+
+jwt:
+  secret: "test-secret-key-that-is-long-enough-32-chars-ABCDEF"
+  expiration: 3600000
+
+
+→ ddl-auto: create-drop fait que les entités JPA créent la table voitures avant data.sql.
+
+🚗 4️⃣ Fichier VoitureService.java
+
+Avant : levait des IllegalArgumentException, renvoyant un 500 Internal Server Error dans les tests.
+
+✅ Modifications principales (Option A implémentée) :
+
+Import de ResponseStatusException et HttpStatus
+
+Conversion des erreurs métier en codes HTTP :
+
+409 CONFLICT pour les doublons d’immatriculation
+
+404 NOT_FOUND pour les voitures inexistantes (get, update, delete)
+
+Gestion du cas où deleteById échoue (EmptyResultDataAccessException)
+
+Exemple :
+
+return repo.findById(id)
+    .map(this::toResponse)
+    .orElseThrow(() ->
+        new ResponseStatusException(HttpStatus.NOT_FOUND, "Voiture introuvable: " + id));
+
+🧰 5️⃣ Fichier VoitureIntegrationTest.java
+
+Avant : le test échouait sur :
+
+POST → attendait 200 alors que ton contrôleur renvoyait 201
+
+GET après delete → levait une exception non mappée (500)
+
+✅ Modifications faites :
+
+Ligne du POST changée :
+
+.andExpect(status().isCreated())
+
+
+Ligne du dernier GET changée :
+
+.andExpect(status().isNotFound());
+
+
+Ces deux lignes synchronisent ton test avec le comportement REST correct.
+
+🔒 6️⃣ Vérification de ton AuthController (pas modifié, mais important)
+
+Tu as bien :
+
+un endpoint /api/auth/login
+
+un utilisateur par défaut (admin / admin123) dans la config de sécurité
+→ ce qui permet au test d’obtenir un vrai JWT valide.
+
+✅ Résumé visuel final
+Élément	Type de changement	Objectif
+VoitureController	Correction import	Lien correct vers le vrai service
+build.gradle	Configuration	Ajout Spring Boot 3.5.6 + dépendances
+application-test.yml	Configuration	H2 en mémoire + création automatique des tables
+VoitureService	Code métier	Mapping des erreurs vers statuts HTTP (404/409)
+VoitureIntegrationTest	Test	Mise à jour des assertions isCreated() et isNotFound()
+
+Souhaites-tu que je te fasse la version finale du test d’intégration + service + YAML dans un seul bloc complet (copier/coller direct) ?
+👉 Ça te garantit qu’en relançant gradlew test, tout passe vert.
