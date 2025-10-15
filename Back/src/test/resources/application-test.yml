@@ -1,0 +1,24 @@
+server:
+  port: 0  # Port aléatoire pour éviter les conflits pendant les tests
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:carsdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop          # Crée les tables à chaque test
+    defer-datasource-initialization: true  # <== crée le schéma avant d’exécuter data.sql
+    show-sql: false
+    properties:
+      hibernate.format_sql: true
+  sql:
+    init:
+      mode: never                   # ne charge pas data.sql en test
+
+jwt:
+  # IMPORTANT : un secret de 32+ chars pour jjwt
+  secret: "test-secret-key-that-is-long-enough-32-chars-ABCDEF"
+  expiration: 3600000

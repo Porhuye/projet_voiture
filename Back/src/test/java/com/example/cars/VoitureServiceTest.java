@@ -1,30 +1,35 @@
 package com.example.cars;
 
+import com.example.cars.dto.VoitureRequest;
+import com.example.cars.dto.VoitureResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.example.cars.dto.VoitureService;
-
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest // démarre tout le contexte Spring pour le test
+@SpringBootTest
 class VoitureServiceTest {
 
     @Autowired
     private VoitureService voitureService;
 
     @Test
-    void testSaveVoiture() {
-        // Arrange : préparer les données
-        Voiture v = new Voiture(null, "Clio", "Rouge", "AA-123-AA", CarType.BERLINE);
+    void testCreateVoiture() {
+        VoitureRequest req = new VoitureRequest(
+                "Clio",
+                "Rouge",
+                "AA-123-AA",
+                CarType.BERLINE   // <- import com.example.cars.CarType
+        );
 
-        // Act : appeler le service
-        Voiture saved = voitureService.save(v);
+        VoitureResponse saved = voitureService.create(req);
 
-        // Assert : vérifier le résultat
-        assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getCarName()).isEqualTo("Clio");
-        assertThat(saved.getCouleur()).isEqualTo("Rouge");
+        assertThat(saved).isNotNull();
+        assertThat(saved.id()).isNotNull();
+        assertThat(saved.carName()).isEqualTo("Clio");
+        assertThat(saved.couleur()).isEqualTo("Rouge");
+        assertThat(saved.immatriculation()).isEqualTo("AA-123-AA");
+        assertThat(saved.carType()).isEqualTo(CarType.BERLINE);
     }
 }

@@ -2,7 +2,7 @@ package com.example.cars;
 
 import com.example.cars.dto.VoitureRequest;
 import com.example.cars.dto.VoitureResponse;
-import com.example.cars.dto.VoitureService;
+import com.example.cars.VoitureService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
