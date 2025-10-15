@@ -1,65 +1,112 @@
 import { useEffect, useState } from 'react'
-import type { CarType, Voiture, VoitureRequest } from '../types'
-
-const CAR_TYPES: CarType[] = ['BERLINE','SUV','COUPE','BREAK','UTILITAIRE','AUTRE']
+import type { Voiture, VoitureRequest } from '../types'
 
 type Props = {
-  initial?: Voiture | null
-  onSubmit: (data: VoitureRequest) => Promise<void>
-  onCancel?: () => void
+  initial?: Voiture            // présent = mode édition
+  onSubmit: (data: VoitureRequest) => Promise<void> | void
+  onCancel?: () => void        // affiché seulement en édition
+}
+
+const empty: VoitureRequest = {
+  carName: '',
+  couleur: '',
+  immatriculation: '',
+  carType: 'BERLINE',
 }
 
 export default function CarForm({ initial, onSubmit, onCancel }: Props) {
-  const [form, setForm] = useState<VoitureRequest>({
-    carName: '', couleur: '', immatriculation: '', carType: 'BERLINE'
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [form, setForm] = useState<VoitureRequest>(initial ? {
+    carName: initial.carName,
+    couleur: initial.couleur,
+    immatriculation: initial.immatriculation,
+    carType: initial.carType,
+  } : empty)
 
+  // si on change de voiture à éditer, on recharge le formulaire
   useEffect(() => {
     if (initial) {
-      const { carName, couleur, immatriculation, carType } = initial
-      setForm({ carName, couleur, immatriculation, carType })
+      setForm({
+        carName: initial.carName,
+        couleur: initial.couleur,
+        immatriculation: initial.immatriculation,
+        carType: initial.carType,
+      })
+    } else {
+      setForm(empty)
     }
   }, [initial])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null); setLoading(true)
-    try { await onSubmit(form) }
-    catch (err: unknown) { setError(err instanceof Error ? err.message : 'Erreur') }
-    finally { setLoading(false) }
+    if (!form.carName.trim() || !form.couleur.trim() || !form.immatriculation.trim()) return
+    await onSubmit({
+      carName: form.carName.trim(),
+      couleur: form.couleur.trim(),
+      immatriculation: form.immatriculation.trim(),
+      carType: form.carType,
+    })
   }
 
   return (
-    <form onSubmit={submit} className="row">
-      {error && <div className="alert error">{error}</div>}
-
-      <input className="input" placeholder="Nom (carName)"
-             value={form.carName}
-             onChange={e => setForm({ ...form, carName: e.target.value })} required />
-
-      <div className="row" style={{gridTemplateColumns:'1fr 1fr', gap:12}}>
-        <input className="input" placeholder="Couleur"
-               value={form.couleur}
-               onChange={e => setForm({ ...form, couleur: e.target.value })} required />
-
-        <input className="input" placeholder="Immatriculation"
-               value={form.immatriculation}
-               onChange={e => setForm({ ...form, immatriculation: e.target.value })} required />
+    <form onSubmit={submit} style={{display:'grid', gap:12, marginTop:12}}>
+      <div className="grid-2">
+        <div>
+          <label className="label">Nom</label>
+          <input
+            className="input"
+            value={form.carName}
+            onChange={e => setForm({ ...form, carName: e.target.value })}
+            placeholder="Ex: Clio"
+            required
+          />
+        </div>
+        <div>
+          <label className="label">Couleur</label>
+          <input
+            className="input"
+            value={form.couleur}
+            onChange={e => setForm({ ...form, couleur: e.target.value })}
+            placeholder="Ex: Rouge"
+            required
+          />
+        </div>
       </div>
 
-      <select className="select"
-              value={form.carType}
-              onChange={e => setForm({ ...form, carType: e.target.value as CarType })}>
-        {CAR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-      </select>
+      <div className="grid-2">
+        <div>
+          <label className="label">Immatriculation</label>
+          <input
+            className="input"
+            value={form.immatriculation}
+            onChange={e => setForm({ ...form, immatriculation: e.target.value })}
+            placeholder="AA-123-AA"
+            required
+          />
+        </div>
+        <div>
+          <label className="label">Type</label>
+          <select
+            className="input"
+            value={form.carType}
+            onChange={e => setForm({ ...form, carType: e.target.value as Voiture['carType'] })}
+          >
+            <option value="BERLINE">Berline</option>
+            <option value="SUV">SUV</option>
+            <option value="SPORT">Sport</option>
+            <option value="UTILITAIRE">Utilitaire</option>
+          </select>
+        </div>
+      </div>
 
-      <div className="actions">
-        <button type="submit" className="btn primary" disabled={loading}>
-          {loading ? 'En cours…' : (initial ? 'Enregistrer' : 'Créer')}
+      <div style={{display:'flex', gap:8, justifyContent:'flex-end', marginTop:4}}>
+        {onCancel && (
+          <button type="button" className="btn" onClick={onCancel}>
+            Annuler
+          </button>
+        )}
+        <button className="btn primary" type="submit">
+          {initial ? 'Enregistrer' : 'Créer'}
         </button>
-        {onCancel && <button type="button" className="btn ghost" onClick={onCancel}>Annuler</button>}
       </div>
     </form>
   )

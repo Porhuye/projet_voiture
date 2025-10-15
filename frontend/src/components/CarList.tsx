@@ -7,31 +7,37 @@ type Props = {
 }
 
 export default function CarList({ items, onEdit, onDelete }: Props) {
-  if (!items.length) return <p style={{color:'var(--muted)'}}>Aucune voiture pour le moment.</p>
+  if (items.length === 0) return <p>Aucune voiture pour le moment.</p>
 
   return (
-    <table className="table">
-      <thead>
-      <tr>
-        <th>Nom</th><th>Couleur</th><th>Immat.</th><th>Type</th><th></th>
-      </tr>
-      </thead>
-      <tbody>
-      {items.map(v => (
-        <tr key={v.id}>
-          <td>{v.carName}</td>
-          <td>{v.couleur}</td>
-          <td>{v.immatriculation}</td>
-          <td><span className="tag">{v.carType}</span></td>
-          <td style={{textAlign:'right'}}>
-            <div className="actions" style={{justifyContent:'flex-end'}}>
-              <button className="btn" onClick={() => onEdit(v)}>Éditer</button>
-              <button className="btn danger" onClick={() => onDelete(v.id)}>Supprimer</button>
-            </div>
-          </td>
-        </tr>
-      ))}
-      </tbody>
-    </table>
+    <div style={{overflowX:'auto', marginTop:12}}>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Couleur</th>
+            <th>Immatriculation</th>
+            <th>Type</th>
+            <th style={{width:160}}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(v => (
+            <tr key={v.id}>
+              <td>{v.carName}</td>
+              <td>{v.couleur}</td>
+              <td>{v.immatriculation}</td>
+              <td>{v.carType}</td>
+              <td>
+                <div style={{display:'flex', gap:8}}>
+                  <button className="btn" onClick={() => onEdit(v)}>Modifier</button>
+                  <button className="btn danger" onClick={() => onDelete(v.id)}>Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
